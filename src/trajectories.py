@@ -559,7 +559,7 @@ class SubdailyHydrographRefitter:
         return [tpl_sorted[i] for i in best]
 
     # ---------------------------------------------------------------------
-    # Internals: your fetch/build logic (kept very close to your version)
+    # Internals: fetch/build logic
     # ---------------------------------------------------------------------
     def _build_subdaily_event_dataset(
         self,
