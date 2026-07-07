@@ -287,7 +287,7 @@ def historic_events_to_export(df: pd.DataFrame, sim_id: int = 0) -> pd.DataFrame
     # Ensure datetime
     df["start"] = pd.to_datetime(df["start"])
 
-    # Month = normalized to month-start (consistent with your other export)
+    # Month = normalized to month-start
     df["Month"] = df["start"].dt.to_period("M").dt.to_timestamp()
 
     # Site
@@ -300,7 +300,7 @@ def historic_events_to_export(df: pd.DataFrame, sim_id: int = 0) -> pd.DataFrame
     df = df.reset_index(drop=True)
     df["Storm_Index"] = np.arange(1, len(df) + 1)
 
-    # Event_ID: Sim_StormIndex (you can change this pattern if needed)
+    # Event_ID: Sim_StormIndex
     df["Event_ID"] = df["Sim"].astype(str) + "_" + df["Storm_Index"].astype(str)
 
     # Frequency: count of events per Site-Month
@@ -821,7 +821,7 @@ class HydroClimateDataset:
             df = df.apply(pd.to_numeric, errors="coerce")
             df = _ensure_naive_datetime_index(df)
 
-            # Optionally restrict to gauge columns only (if your CSV has extras)
+            # Optionally restrict to gauge columns only
             gauge_names = [g.name for g in self.gauges]
             present = [c for c in gauge_names if c in df.columns]
             if present:
@@ -1060,7 +1060,7 @@ class HydroClimateDataset:
         # Drop raw gauge columns (duplicates of *_max)
         mon_feat = mon_feat.drop(columns=gauge_cols, errors="ignore")
     
-        # Ensure consistent index convention (month-end is what you're using elsewhere)
+        # Ensure consistent index convention
         mon_feat = _to_month_end_index(mon_feat)
     
         # Add month cyclic features
@@ -1081,7 +1081,7 @@ class HydroClimateDataset:
     
         marks, events = self.build_monthly_event_marks(
             Q_daily=Q_for_events,
-            threshold_map=getattr(self, "event_threshold_map", None),  # if you set it externally, it will use it
+            threshold_map=getattr(self, "event_threshold_map", None),
             threshold_mode=getattr(self, "threshold_mode", "quantile"),
             q=getattr(self, "threshold_q", 0.9),
             scalar_threshold=getattr(self, "scalar_threshold", None),
@@ -1162,7 +1162,6 @@ class HydroClimateDataset:
         ams_df = base[cols].resample(annual_rule).max().dropna(how="all")
     
         # --- Empirical RL from AMS (no extra resampling inside) ---
-        # We'll reuse your empirical_return_levels by giving it AMS and resample_rule=None-equivalent.
         # simplest: compute directly here from ams_df column-by-column.
         results = {}
         t_arr = np.asarray(targets, dtype=float)
@@ -1395,7 +1394,6 @@ class TimeSeriesCVSplitter:
         print("=== Consecutive splits ===")
         for i in range(self.cfg.n_consecutive_splits):
             # Start at beginning + i * consecutive_train_years
-            # (This pattern matches your original description.)
             step_y, step_m = self._years_to_years_months(i * self.cfg.consecutive_train_years)
             split_start = self.start_date_ + pd.DateOffset(years=step_y, months=step_m)
 
