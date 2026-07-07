@@ -2,12 +2,10 @@
 
 Code accompanying:
 
-> Nayak, A., et al. *Attention-Based Stochastic Simulation of Climate-Informed
+> Nayak, A., Gentine, P., and Lall, U. *Attention-Based Stochastic Simulation of Climate-Informed
 > Spatiotemporal Flood Risk for Multisite Insurance Portfolios.*
 > *Geophysical Research Letters* (in press).
 > DOI: `<add on publication>`
-
-<!-- TODO: fill in full author list, volume/issue, and DOI once the article is live. -->
 
 ---
 
@@ -37,9 +35,7 @@ The end-to-end pipeline is:
 4. **Marginal + dependence modelling** — parametric marginals for flood
    characteristics (`marginals_pos.py`) and a rank-reordering empirical copula
    (`empirical_copula.py`).
-5. **Spatiotemporal coherence** — a Schaake-shuffle step (invoked from the
-   samplers) restores cross-site and temporal joint structure.
-6. **Ensemble propagation** — large synthetic ensembles feed downstream
+5. **Ensemble propagation** — large synthetic ensembles feed downstream
    insurance/solvency analysis.
 
 The primary case study is a 117-gauge network in the Mississippi River Basin.
@@ -68,30 +64,8 @@ The primary case study is a 117-gauge network in the Mississippi River Basin.
 
 | Notebook | Purpose | Paper artifact |
 |----------|---------|----------------|
-| `Main.ipynb` | End-to-end driver: preprocessing → transformer → analog/copula → Schaake → ensemble | main results |
+| `Main.ipynb` | End-to-end driver: preprocessing → transformer → analog/copula → ensemble | main results |
 | `Wrapper.ipynb` | Orchestration / cross-validation runs (papermill) | — |
-| `baselines_notebook.ipynb` | Runs the three baselines and comparison metrics | baseline comparison |
-| `Fig23_Validate.ipynb` | Validation summary | Figures 2–3 |
-| `Fig4_Climate.ipynb` | Multi-site wavelet + Integrated Gradients attribution | Figure 4 |
-| `faceted_hydrographs.ipynb` | Faceted simulated hydrograph plots | supporting figure |
-
-<!-- TODO: confirm the figure numbers above match the final typeset article. -->
-
----
-
-## Installation
-
-Tested with Python 3.10+.
-
-```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-`torch`, `captum`, and `papermill` are only needed for the model and the
-attribution/orchestration notebooks respectively; see comments in
-`requirements.txt`.
 
 ---
 
@@ -120,12 +94,6 @@ from public USGS services at run time.
   resolved gauge list (and downloaded series) to disk and load from the cache
   rather than re-querying. *Recommended: commit the resolved gauge list as a
   static CSV alongside the code.*
-- **`EmpiricalCopulaSimulator.smooth_ranks`.** The `smooth_ranks` option in
-  `fit_empirical_copula()` populates `u_mat_`, but `sample()` currently rebuilds
-  the copula draw from the integer rank matrix with fresh per-draw jitter, so
-  `smooth_ranks` does **not** change sampled output. This is intentional for the
-  published results (jitter is applied at sample time) but is worth knowing if
-  you extend the class.
 
 ---
 
@@ -135,7 +103,7 @@ Three stochastic flood generators are provided for comparison, all fit on
 training data only and evaluated through a shared CRPS/QQ interface
 (`baselines.py`):
 
-1. **`LallSharmaKNN`** — Lall & Sharma (1996) kNN Markov successor generator.
+1. **`LallSharmaKNN`** — Lall & Sharma (1996) kNN bootstrap.
 2. **`SeasonalAR`** — periodic AR(2) on monthly-max anomalies.
 3. **`NeymanScottBaseline`** — independent parametric sampling per month
    (Poisson frequency, Exponential intensity and duration).
