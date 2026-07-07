@@ -50,7 +50,7 @@ def expectile_loss(y_pred: torch.Tensor, y_true: torch.Tensor, tau: float = 0.8)
 def weighted_mse(y_pred: torch.Tensor, y_true: torch.Tensor, q: float = 0.8, gamma: float = 5.0) -> torch.Tensor:
     """
     Upweights squared error for targets above the empirical q-quantile (computed per-batch).
-    Use with care: batch-quantile can add noise; for stability you can compute a fixed threshold.
+    Use with care: batch-quantile can add noise; can compute a fixed threshold for stability.
     """
     thresh = torch.quantile(y_true, q)
     weights = torch.ones_like(y_true)
@@ -153,7 +153,6 @@ class AutoCorrelation(nn.Module):
         for i in range(weights.size(1)):
             delay = topk_idx[:, i]  # [B]
             # roll each batch by its delay (vectorized via loop over batch)
-            # (This is the simplest readable version. If you need speed, we can vectorize.)
             v_shifted = torch.stack([torch.roll(V[b], shifts=int(delay[b].item()), dims=0) for b in range(B)], dim=0)
             out = out + weights[:, i].view(B, 1, 1) * v_shifted
 
@@ -238,7 +237,6 @@ class AutoformerMTS_Encoder(nn.Module):
             for _ in range(num_layers)
         ])
 
-        # reuse your pooling options
         if pool == "attn":
             self.pool = AttnPool(hidden_dim)
         elif pool == "mean":
@@ -546,7 +544,7 @@ class PredictConfig:
     knn_mean: KNNMeanConfig = field(default_factory=KNNMeanConfig)
     knn_resid: KNNResidualConfig = field(default_factory=KNNResidualConfig)
 
-    # If you want reproducible ensembles:
+    # For reproducible ensembles:
     seed: int = 0
 
 
@@ -1486,7 +1484,7 @@ class HybridKNNTransformer:
         mean: MeanMethod = "transformer",                 # "transformer" | "knn_blend"
         knn_mean_cfg: Optional[KNNMeanConfig] = None,     # used if mean="knn_blend"
         # --- ensemble PI shading (optional) ---
-        ensemble_cfg: Optional[Any] = None,               # EnsembleConfig in your newer API
+        ensemble_cfg: Optional[Any] = None,
         pi_lo: float = 0.10,
         pi_hi: float = 0.90,
         pi_color: str = "lightgray",
