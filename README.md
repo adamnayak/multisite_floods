@@ -123,4 +123,4 @@ See [`LICENSE`](LICENSE).
 
 ## Contact
 
-Adam Nayak, Columbia University, an3232@columbia.edu
+If you have general questions about the code, model, or data please feel free to reach out and I am always happy to try to do my best to help out. If you're interested in using similar method or working on a new project, I am always looking to collaborate and am happy to contribute more broadly! Email is always in flux - but try me at adam.nayak@columbia.edu, adam.nayak@stanford.edu, adamnayak1@gmail.com, or feel free to ping me on LinkedIn.
