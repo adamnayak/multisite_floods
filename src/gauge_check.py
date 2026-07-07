@@ -26,7 +26,7 @@ class MississippiGaugeChecker:
 
     Core:
       - scan() -> MississippiGaugeScanResult (meta dict + filtered POR df)
-      - filter_for_overlap() -> further restrict to gauges compatible with your loader
+      - filter_for_overlap() -> further restrict to compatible gauges
       - fetch_site_coords() -> coords df (robust chunking)
       - plot() -> optional (geopandas + geodatasets)
     """
