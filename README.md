@@ -120,3 +120,7 @@ added once the DOI is assigned.
 ## License
 
 See [`LICENSE`](LICENSE).
+
+## Contact
+
+Adam Nayak, Columbia University, an3232@columbia.edu
