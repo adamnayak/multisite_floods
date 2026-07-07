@@ -333,7 +333,6 @@ class KNNConditionalCopulaSampler:
                     
                 if return_format == "wide":
                     # Merge all site variables into the timestep row dict.
-                    # Columns already site-prefixed in your copula_sims, so no collisions.
                     wide_rows[t].update(row_dict)
                 else:
                     long_rows.append(row_dict)
