@@ -6,6 +6,8 @@ Code accompanying:
 > Spatiotemporal Flood Risk for Multisite Insurance Portfolios.*
 > *Geophysical Research Letters* (in press).
 > DOI: `<add on publication>`
+>
+> Preprint available at: https://arxiv.org/abs/2509.14162
 
 ---
 
