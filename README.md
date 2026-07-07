@@ -2,9 +2,9 @@
 
 Code accompanying:
 
-> Nayak, A., Gentine, P., and Lall, U. *Attention-Based Stochastic Simulation of Climate-Informed
+> Nayak, A., Gentine, P., and Lall, U. 2026. *Attention-Based Stochastic Simulation of Climate-Informed
 > Spatiotemporal Flood Risk for Multisite Insurance Portfolios.*
-> *Geophysical Research Letters* (in press).
+> *Geophysical Research Letters* (accepted).
 > DOI: `<add on publication>`
 >
 > Preprint available at: https://arxiv.org/abs/2509.14162
