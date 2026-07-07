@@ -62,7 +62,7 @@ class TruncatedLognormalMarginal:
         (useful when data have many structural zeros and positives are thresholded)
 
     Notes:
-    - Negatives are clipped to 0.0 before threshold inference (consistent with your other marginals).
+    - Negatives are clipped to 0.0 before threshold inference (consistent other marginals).
     - For numerical stability, we enforce y >= 1e-12 before taking logs.
     """
     supports_nonnegative: ClassVar[bool] = True
@@ -222,7 +222,7 @@ class TruncatedExponentialMarginal:
     def fit(self, x: np.ndarray) -> "TruncatedExponentialMarginal":
         x = _as_float_1d(x)
 
-        # Nonnegative support: clip negatives (or you could raise; clipping is consistent with your other marginals)
+        # Nonnegative support: clip negatives (clipping is consistent with other marginals)
         x = np.clip(x, 0.0, None)
 
         if x.size == 0:
