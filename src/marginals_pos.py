@@ -62,7 +62,7 @@ class TruncatedLognormalMarginal:
         (useful when data have many structural zeros and positives are thresholded)
 
     Notes:
-    - Negatives are clipped to 0.0 before threshold inference (consistent other marginals).
+    - Negatives are clipped to 0.0 before threshold inference (consistent with your other marginals).
     - For numerical stability, we enforce y >= 1e-12 before taking logs.
     """
     supports_nonnegative: ClassVar[bool] = True
@@ -222,7 +222,7 @@ class TruncatedExponentialMarginal:
     def fit(self, x: np.ndarray) -> "TruncatedExponentialMarginal":
         x = _as_float_1d(x)
 
-        # Nonnegative support: clip negatives (clipping is consistent with other marginals)
+        # Nonnegative support: clip negatives (or you could raise; clipping is consistent with your other marginals)
         x = np.clip(x, 0.0, None)
 
         if x.size == 0:
@@ -333,8 +333,10 @@ class NegBinMarginal:
       nbinom(n, p) with mean = n*(1-p)/p
 
     Fit strategy:
-      1) Try MLE via scipy.stats.nbinom.fit(..., floc=0)
-      2) Fallback to method-of-moments if MLE fails or is degenerate
+      Method of moments. scipy's nbinom is an rv_discrete with no .fit(), so a
+      scipy MLE is unavailable; MoM gives the standard NB estimator
+      (n = mean^2 / (var - mean), p = mean / var), falling back to a
+      near-Poisson limit when the data are not overdispersed.
     """
     n_: float = 1.0
     p_: float = 0.5
@@ -346,21 +348,7 @@ class NegBinMarginal:
             return self
         x = np.clip(np.round(x), 0, None)
 
-        # Try MLE (floc=0 keeps support at >=0)
-        try:
-            # scipy returns (n, p, loc) for nbinom? Actually for discrete, .fit may return (n, p, loc)
-            params = nbinom.fit(x, floc=0)
-            if len(params) == 3:
-                n_hat, p_hat, _loc = params
-            else:
-                n_hat, p_hat = params[:2]
-            if np.isfinite(n_hat) and np.isfinite(p_hat) and n_hat > 0 and 0 < p_hat < 1:
-                self.n_, self.p_ = float(n_hat), float(p_hat)
-                return self
-        except Exception:
-            pass
-
-        # Fallback: method of moments
+        # Method of moments (scipy's discrete nbinom has no .fit()).
         m = float(np.mean(x))
         v = float(np.var(x, ddof=0))
         if v <= m + 1e-12:

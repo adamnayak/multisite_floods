@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Dict, Optional, List, Union, Callable, Any, Tuple
 
 import numpy as np
@@ -8,110 +7,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from scipy.stats import rankdata, kstest
-from scipy.interpolate import UnivariateSpline
-from scipy.integrate import cumulative_trapezoid, trapezoid
 
-from marginals_pos import fit_with_auto_shift 
-
-
-# ---------------------------
-# Default marginal: "log-spline-like" 1D density
-# ---------------------------
-
-@dataclass
-class LogSplineMarginal:
-    """
-    Practical Python surrogate for logspline density estimation:
-
-    1) Estimate a smooth density on a grid using a Gaussian KDE-like approach
-       (implemented via histogram smoothing in log space for robustness),
-    2) Fit a spline to log(pdf) over that grid,
-    3) Numerically integrate to get CDF, and invert via interpolation.
-
-    Notes:
-    - This is *not* the exact R `logspline` algorithm, but it behaves similarly:
-      smooth, flexible, nonparametric density with stable sampling/ppf.
-    - If you already have a preferred univariate fit (parametric or nonparam),
-      pass it via the simulator's `marginal_factory`.
-    """
-    grid_size: int = 512
-    smooth: float = 1e-2  # spline smoothing factor
-    clip_quantiles: Tuple[float, float] = (0.001, 0.999)
-    eps: float = 1e-12
-
-    # fitted fields
-    x_grid: Optional[np.ndarray] = None
-    logpdf_spline: Optional[UnivariateSpline] = None
-    cdf_grid: Optional[np.ndarray] = None
-
-    def fit(self, x: np.ndarray) -> "LogSplineMarginal":
-        x = np.asarray(x, dtype=float)
-        x = x[np.isfinite(x)]
-        if x.size < 5:
-            raise ValueError("Need at least 5 finite samples to fit a marginal.")
-
-        lo = np.quantile(x, self.clip_quantiles[0])
-        hi = np.quantile(x, self.clip_quantiles[1])
-        if not np.isfinite(lo) or not np.isfinite(hi) or hi <= lo:
-            lo, hi = np.min(x), np.max(x)
-            if hi <= lo:
-                hi = lo + 1.0
-
-        # grid
-        self.x_grid = np.linspace(lo, hi, self.grid_size)
-
-        # density estimate via histogram -> smooth -> log spline
-        hist, edges = np.histogram(x, bins=max(30, int(np.sqrt(x.size))), density=True)
-        centers = 0.5 * (edges[:-1] + edges[1:])
-
-        # interpolate hist to grid, avoid zeros
-        pdf0 = np.interp(self.x_grid, centers, hist, left=hist[0], right=hist[-1])
-        pdf0 = np.maximum(pdf0, self.eps)
-
-        # fit spline to log pdf
-        self.logpdf_spline = UnivariateSpline(self.x_grid, np.log(pdf0), s=self.smooth * self.grid_size)
-
-        # build normalized pdf + cdf on grid
-        logpdf = self.logpdf_spline(self.x_grid)
-        pdf = np.exp(logpdf)
-        pdf = np.maximum(pdf, self.eps)
-
-        # normalize
-        area = trapezoid(pdf, self.x_grid)
-        pdf = pdf / max(area, self.eps)
-
-        cdf = cumulative_trapezoid(pdf, self.x_grid, initial=0.0)
-        cdf = np.clip(cdf, 0.0, 1.0)
-        # enforce last exactly 1 for stable inversion
-        if cdf[-1] > 0:
-            cdf = cdf / cdf[-1]
-
-        self.cdf_grid = cdf
-        return self
-
-    def pdf(self, x: np.ndarray) -> np.ndarray:
-        if self.logpdf_spline is None:
-            raise RuntimeError("Marginal not fit.")
-        x = np.asarray(x, dtype=float)
-        return np.exp(self.logpdf_spline(x))
-
-    def cdf(self, x: np.ndarray) -> np.ndarray:
-        if self.x_grid is None or self.cdf_grid is None:
-            raise RuntimeError("Marginal not fit.")
-        x = np.asarray(x, dtype=float)
-        return np.interp(x, self.x_grid, self.cdf_grid, left=0.0, right=1.0)
-
-    def ppf(self, u: np.ndarray) -> np.ndarray:
-        if self.x_grid is None or self.cdf_grid is None:
-            raise RuntimeError("Marginal not fit.")
-        u = np.asarray(u, dtype=float)
-        u = np.clip(u, 0.0, 1.0)
-        return np.interp(u, self.cdf_grid, self.x_grid)
-
-    def rvs(self, n: int, random_state: Optional[np.random.Generator] = None) -> np.ndarray:
-        rng = random_state if random_state is not None else np.random.default_rng()
-        u = rng.random(n)
-        return self.ppf(u)
+from marginals_pos import fit_with_auto_shift, LogSplineMarginal
 
 
 # ---------------------------

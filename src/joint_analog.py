@@ -1,7 +1,7 @@
 """
 joint_analog.py
 
-Approach D: Joint Analog Simulation
+Joint Analog Simulation
 
 The Transformer encoder is trained solely on the wavelet-reconstructed signal
 (identical to analog_mode in HybridKNNTransformer). After training, a joint
@@ -284,7 +284,6 @@ class JointAnalogSampler:
         df: pd.DataFrame,
         n_samples: int = 1000,
         return_signal_ensemble: bool = True,
-        return_payloads: bool = False,
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, np.ndarray]]:
         """
         Generate ensemble of joint (signal + flood characteristics) trajectories
@@ -300,16 +299,8 @@ class JointAnalogSampler:
         return_signal_ensemble : bool
             If True, also return next_ens array [n_samples, pred_horizon, n_sites]
             containing signal values, matching the existing next_ens convention
-            used by the notebook for compatibility with Approaches A/B.
-        return_payloads : bool
-            If True, also return the raw analog payloads array of shape
-            [n_samples, pred_horizon, n_joint_cols]. This is the rank template
-            used by schaake_shuffle.apply_schaake_shuffle() to restore spatial
-            and temporal dependence in copula-simulated output. Column ordering
-            mirrors self.joint_cols: [site0_signal, ..., siteN_signal,
-            site0_var0, ..., siteN_var0, site0_var1, ..., siteN_var1, ...].
-            When return_signal_ensemble is also True, return order is:
-            (resampled_all, next_ens, payloads).
+            used by the notebook for compatibility with Approaches A/B. This is
+            the signal ensemble consumed by the copula conditioning step.
 
         Returns
         -------
@@ -319,9 +310,6 @@ class JointAnalogSampler:
         next_ens : np.ndarray, shape [n_samples, pred_horizon, n_sites]
             Signal ensemble only. Returned if return_signal_ensemble=True.
             Matches existing next_ens shape convention.
-        payloads : np.ndarray, shape [n_samples, pred_horizon, n_joint_cols]
-            Raw analog window values. Returned if return_payloads=True.
-            Used as rank template for the Schaake Shuffle.
         """
         if not self.joint_store or self._joint_keys is None:
             raise RuntimeError("Call build_joint_store() before sample_ensemble().")
@@ -361,22 +349,15 @@ class JointAnalogSampler:
         # --- assemble resampled_all DataFrame ---
         resampled_all = self._payloads_to_dataframe(payloads)
 
-        if not return_signal_ensemble and not return_payloads:
+        if not return_signal_ensemble:
             return resampled_all
 
-        # --- extract next_ens for backward compatibility ---
+        # --- extract next_ens for the copula conditioning step ---
         # Shape: [n_samples, pred_horizon, n_sites]
         signal_col_indices = list(range(self._n_signal))
         next_ens = payloads[:, :, signal_col_indices]  # [E, H, S]
 
-        # --- return based on flags ---
-        if return_signal_ensemble and return_payloads:
-            return resampled_all, next_ens, payloads
-        elif return_signal_ensemble:
-            return resampled_all, next_ens
-        else:
-            # return_payloads only
-            return resampled_all, payloads
+        return resampled_all, next_ens
 
     @torch.no_grad()
     def sample_ensemble_windowed(
